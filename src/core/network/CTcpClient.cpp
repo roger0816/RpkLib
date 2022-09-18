@@ -53,6 +53,8 @@ int CTcpClient::connectHost(QString sIp, QString sPort, QByteArray arrInput, QBy
     loop->exec();
 
 
+    return iRe;
+
     /*
     int iRe=0;
 
