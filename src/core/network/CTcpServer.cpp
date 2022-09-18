@@ -1,170 +1,127 @@
 ﻿#include "CTcpServer.h"
 #include "Packager.h"
-
+#include "CTcpServerSubHandler.h"
 #include <QList>
 #include <QMap>
 
-QMap <QTcpSocket*, Packager*> SocketMap;
+
 
 CTcpServer::CTcpServer(QObject *parent) :
-    QThread(parent)
+    QTcpServer(parent)
 {
-
-    m_tcpServer = new QTcpServer(this);
-
+    handlerList.clear();
 }
 
-void CTcpServer::run()
+CTcpServer::~CTcpServer()
 {
+    while(handlerList.length())
+    {
+        CTcpServerSubHandler *handler =  handlerList.takeFirst();
 
+        qDebug() << "CTcpServer remove handler";
 
+        handler->exit(0);
+
+        delete handler;
+    }
+    qDebug() << "CTcpServer done";
+
+    //exit(0);
 }
+
+
 
 void CTcpServer::startServer(QString sPort)
 {
 
-    //m_clientConnection=NULL;
-
-
-    m_tcpServer->listen(QHostAddress::Any, sPort.toInt());
-
-    connect(m_tcpServer, SIGNAL(newConnection()), this, SLOT(slotAcceptConnection()));
-
-    emit signalLog("TCP SERVER CREAT");
+    if(!this->listen(QHostAddress::Any, sPort.toInt()))
+    {
+        qDebug() << "CTcpServer Could not start server";
+    }
+    else
+    {
+        qDebug() << "CTcpServer Listening to port " << sPort << "...";
+    }
 
 }
 
 void CTcpServer::stop()
 {
 
-    if(!m_tcpServer->isListening())
+    if(!this->isListening())
         return;
 
-    m_tcpServer->close();
+    this->close();
 
 }
 
-void CTcpServer::slotAcceptConnection()
+
+void CTcpServer::handlerQuery(QByteArray data, CTcpServerSubHandler *handler)
 {
+     uintptr_t h =  (uintptr_t)handler;
 
-    emit signalLog("get client link");
+     emit signalReadAll(data, h);
 
-#if 1
-    static quint64 connectID = 0;
+}
+void CTcpServer::handlerFinish()
+{
+    CTcpServerSubHandler *handler = qobject_cast<CTcpServerSubHandler *>(sender());
 
-    QTcpSocket * sp = m_tcpServer->nextPendingConnection();
+//    qDebug() << "CTcpServer handler" <<  (uintptr_t)handler << "finish";
 
-    sp->setObjectName(QString("connect_%1").arg(++connectID));
+//    foreach(CTcpServerSubHandler* h  ,handlerList)
+//    {
+//        qDebug() << (uintptr_t)h;
+//    }
 
-    Packager * pp = new Packager();
-
-    QObject::connect(sp, SIGNAL(readyRead()), this, SLOT(slotReadClient()));
-
-    SocketMap.insert(sp,pp);
-#else
-    if(m_clientConnection!=NULL)
+    if(handlerList.contains(handler))
     {
-        m_clientConnection->abort();
+        handlerList.removeOne(handler);
 
-        m_clientConnection->disconnect();
+        //qDebug() << "CTcpServer handler" <<  (uintptr_t)handler  << "remove form list" << handlerList.contains(handler);
     }
 
-    m_clientConnection = m_tcpServer->nextPendingConnection();
+//    foreach(CTcpServerSubHandler *h  ,handlerList)
+//    {
+//        qDebug() << (uintptr_t)h;
+//    }
 
-    m_clientConnection->connect(m_clientConnection, SIGNAL(readyRead()), this, SLOT(slotReadClient()));
-#endif
+
+
+    handler->deleteLater();
 
 }
 
-void CTcpServer::slotReadClient()
+
+void CTcpServer::incomingConnection(qintptr socketDescriptor)
 {
-#if 1
+    // We have a new connection
+    qDebug() << "CTcpServer " << socketDescriptor << " Connecting...";
 
-    QTcpSocket *pSenderSocket = qobject_cast<QTcpSocket*>(sender());
+    // Every new connection will be run in a newly created thread
+    CTcpServerSubHandler *handler = new CTcpServerSubHandler(socketDescriptor, this);
 
-    //qDebug()<<  pSenderSocket->objectName();
+    handlerList << handler;
 
-    Packager * pp = SocketMap.value(pSenderSocket);
+    // connect signal/slot
+    // once a thread is not needed, it will be beleted later
+    connect(handler, SIGNAL(finished()), this, SLOT(handlerFinish()));
+    connect(handler, SIGNAL(clientQuery(QByteArray, CTcpServerSubHandler *)), this,SLOT(handlerQuery(QByteArray, CTcpServerSubHandler *)));
 
-    pp->insert(pSenderSocket->readAll());
-
-    if(pp->isPackageComplete())
-    {
-        QByteArray readdate = pp->unPackage();
-
-        QString str =readdate;
-
-        emit signalLog("read client : "+str);
-
-        emit signalReadAll(readdate);
-
-
-        if(readdate=="test")
-        {
-            slotRetrun(QByteArray("testOk"));
-        }
-
-        pp->clear();
-    }
-
-#else
-    static Packager pp;
-
-    pp.insert(m_clientConnection->readAll());
-
-    if(pp.isPackageComplete())
-    {
-        QByteArray readdate = pp.unPackage();
-
-        //qDebug() << "slotReadClient" << QString(readdate);
-
-        QString str =readdate;
-
-        emit signalLog("read client : "+str);
-
-        emit signalReadAll(readdate);
-
-        pp.clear();
-    }
-    //    QString sReClient;
-
-    //    emit signalLog(sReClient);
-
-    //    QByteArray tmp;
-
-    //    tmp.append(sReClient);
-
-    //    QTcpSocket *pSenderSocket = qobject_cast<QTcpSocket*>(sender());
-
-    //    pSenderSocket->write(tmp);
-#endif
-
+    handler->start();
 }
 
-void CTcpServer::slotRetrun(QByteArray arrReturn)
+void CTcpServer::slotRetrun(QByteArray arrReturn, uintptr_t handlerID)
 {
-    Packager pp;
+    CTcpServerSubHandler *handler = (CTcpServerSubHandler *)handlerID;
 
-    QTcpSocket *pSenderSocket = qobject_cast<QTcpSocket*>(sender());
+    qDebug() << "CTcpServer handler" <<  (uintptr_t)handler << "responcesClient";
 
-    //qDebug() << "slotRetrun" << arrReturn;
-
-    pp.insert(arrReturn);
-
-    pSenderSocket->write(pp.package());
-
-    QString sReClient=arrReturn;
-
-    emit signalLog("return client : "+sReClient);
-
-    Packager * oldpp = SocketMap.value(pSenderSocket);
-
-    oldpp->clear();
-
-    delete oldpp;
-
-    SocketMap.remove(pSenderSocket);
+    if(handlerList.contains(handler))
+        handler->responcesClient(arrReturn);
 }
+
+
 
 
 

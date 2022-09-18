@@ -25,7 +25,7 @@ Network::Network(QObject *parent):
 
     g_tcpServer=new CTcpServer(this);
     g_tcpServer->connect(g_tcpServer,SIGNAL(signalLog(QString)),this,SIGNAL(signalLog(QString)));
-    g_tcpServer->connect(g_tcpServer,SIGNAL(signalReadAll(QByteArray)),this,SIGNAL(signalReadAll(QByteArray)));
+    g_tcpServer->connect(g_tcpServer,SIGNAL(signalReadAll(QByteArray, uintptr_t )),this,SIGNAL(signalReadAll(QByteArray, uintptr_t )));
 }
 
 Network::~Network()
@@ -43,9 +43,9 @@ void Network::stopTcpServer()
     g_tcpServer->stop();
 }
 
-void Network::recallClient(QByteArray arrReturn)
+void Network::recallClient(QByteArray arrReturn, uintptr_t handlerID)
 {
-    g_tcpServer->slotRetrun(arrReturn);
+    g_tcpServer->slotRetrun(arrReturn,handlerID);
 }
 
 int Network::connectHost(QString sIp, QString sPort, QByteArray arrInput, QByteArray &arrOutput, int iWaitTimer)

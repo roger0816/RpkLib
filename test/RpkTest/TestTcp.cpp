@@ -9,7 +9,7 @@ TestTcp::TestTcp(QWidget *parent) :
 
     connect(&RPKCORE.network,SIGNAL(replyFromServer(QString,QByteArray,int)),this,SLOT(slotReply(QString,QByteArray,int)));
 
-    connect(&RPKCORE.network,SIGNAL(signalReadAll(QByteArray)),this,SLOT(getFromClient(QByteArray)));
+    connect(&RPKCORE.network,SIGNAL(signalReadAll(QByteArray,uintptr_t)),this,SLOT(getFromClient(QByteArray,uintptr_t)));
 
 
 }
@@ -43,7 +43,7 @@ void TestTcp::on_btnRunServer_clicked()
     }
 }
 
-void TestTcp::getFromClient(QByteArray data)
+void TestTcp::getFromClient(QByteArray data, uintptr_t handlerID)
 {
     qDebug()<<"from Client : "<<QString(data).toStdString().c_str();
 
@@ -82,7 +82,7 @@ void TestTcp::getFromClient(QByteArray data)
         sRe = QString(data);
     }
 
-    RPKCORE.network.recallClient(sRe.toLatin1());
+    RPKCORE.network.recallClient(sRe.toLatin1(), handlerID);
 }
 
 void TestTcp::slotReply(QString sId, QByteArray data, int Error)

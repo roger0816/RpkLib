@@ -28,6 +28,7 @@ SOURCES += \
     database/DataBase.cpp \
     network/CTcpClient.cpp \
     network/CTcpServer.cpp \
+    network/CTcpServerSubHandler.cpp \
     network/Network.cpp \
     network/Packager.cpp \
     network/CData.cpp \
@@ -40,6 +41,7 @@ HEADERS += \
     database/CSql.h \
     network/CTcpClient.h \
     network/CTcpServer.h \
+    network/CTcpServerSubHandler.h \
     network/Packager.h
 
 # Default rules for deployment.

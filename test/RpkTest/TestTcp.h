@@ -24,7 +24,7 @@ private slots:
 
     void on_btnRunServer_clicked();
 
-    void getFromClient(QByteArray data);
+    void getFromClient(QByteArray data,uintptr_t handlerID);
 
     void slotReply(QString sId,QByteArray data,int Error);
     void on_btnClientSend_clicked();

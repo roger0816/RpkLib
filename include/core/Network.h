@@ -111,7 +111,7 @@ public:
 
     void stopTcpServer();
 
-    void recallClient(QByteArray arrReturn);
+    void recallClient(QByteArray arrReturn, uintptr_t handlerID);
 
 
     /** block tcpip client
@@ -136,7 +136,7 @@ signals:
      * @brief signalReadAll
      * @param arrRead
      */
-    void signalReadAll(QByteArray arrRead);
+    void signalReadAll(QByteArray arrRead, uintptr_t handlerID);
 
 
     void replyFromServer(QString sId,QByteArray data,int error);

@@ -4,38 +4,40 @@
 #include <QThread>
 #include <QObject>
 #include <QtNetwork>
+#include <QTcpServer>
+#include "CTcpServerSubHandler.h"
 
 
 
-
-class CTcpServer : public QThread
+class CTcpServer : public QTcpServer
 {
     Q_OBJECT
 public:
     explicit CTcpServer(QObject *parent = 0);
-    void run();
+    ~CTcpServer();
+
     void startServer(QString sPort);
     void stop();
 
-
 private:
-        QTcpServer *m_tcpServer;
+    QTcpServer *m_tcpServer;
 
-        QTcpSocket *m_clientConnection;
-
-
+    QList <CTcpServerSubHandler *> handlerList;
 
 signals:
-        void signalLog(QString st);
-
-        void signalReadAll(QByteArray arrRead);
+    void signalLog(QString st);
+    void signalReadAll(QByteArray data, uintptr_t handlerID);
 
 private slots:
-        void slotAcceptConnection();
-        void slotReadClient();
+    void handlerQuery(QByteArray data, CTcpServerSubHandler * handler);
+    void handlerFinish();
+
+protected:
+    void incomingConnection(qintptr socketDescriptor);
+
 
 public slots:
-        void slotRetrun(QByteArray arrReturn);
+    void slotRetrun(QByteArray arrReturn, uintptr_t handlerID);
 
 };
 
