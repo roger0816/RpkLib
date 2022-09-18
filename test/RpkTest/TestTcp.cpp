@@ -143,10 +143,21 @@ void TestTcp::on_btnSendBig_clicked()
 
     in.append(st);
 
-    RPKCORE.network.connectHost("",ui->txIp->text().trimmed(),ui->txPort->text().trimmed(),in);
+    if(!ui->cbBlock->isChecked())
+    {
+        RPKCORE.network.connectHost("",ui->txIp->text().trimmed(),ui->txPort->text().trimmed(),in);
+    }
 
+    else
+    {
+        QByteArray out;
 
+        RPKCORE.network.connectHost(ui->txIp->text().trimmed(),ui->txPort->text().trimmed(),in,out);
 
+        ui->txOutput->append(QString(out));
+
+        ui->lbClientLen->setText(QString::number(out.length()));
+    }
     //    qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss:zzz");
     //    for(int i=0;i<10000;i++)
     //    {
