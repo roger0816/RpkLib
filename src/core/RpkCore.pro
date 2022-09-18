@@ -37,7 +37,6 @@ SOURCES += \
 
 
 HEADERS += \
-    RpkCore.h \
     database/CSql.h \
     network/CTcpClient.h \
     network/CTcpServer.h \
