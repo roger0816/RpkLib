@@ -1,4 +1,9 @@
 QT+= network sql
+
+LIB_PATH=$$PWD
+
+message($$LIB_PATH)
+
 INCLUDEPATH+=$$PWD \
              $$PWD/include \
              $$PWD/include/core \
@@ -27,13 +32,16 @@ contains(DEFINES,BUILD_PRK){
 }
 else{
      message("Use RPKLib")
-unix|win32: LIBS += -L$$PWD/ -lRpkCore
 
 INCLUDEPATH += $$PWD/include
 DEPENDPATH += $$PWD/include
 
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/RpkCore.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libRpkCore.a
+win32: LIBS += -L$$PWD/ -lRpkCoreWin
+unix: LIBS += -L$$PWD/ -lRpkCoreUnix
+
+
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/RpkCoreWin.lib
+else:win32-g++: PRE_TARGETDEPS += $$PWD/libRpkCoreWin.a
+else:unix: PRE_TARGETDEPS += $$PWD/libRpkCoreUnix.a
 
 }
-

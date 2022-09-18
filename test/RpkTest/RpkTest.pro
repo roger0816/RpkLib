@@ -29,3 +29,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 include(../../RpkCore.pri)
 
 DESTDIR =$$PWD/../bin/
+
+
